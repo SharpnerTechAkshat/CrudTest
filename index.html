@@ -1,19 +1,110 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <title>Product Details</title>
 </head>
 <body>
-    <form id="form">
-       Selling Price <input type="number" id="sp">
-       Product Name <input type="text" id="pn">
-       <input type="submit" value="Add Product" id="submit">
-      </form>
-      <div id="display">
+  <h2>Product Details:</h2>
 
-    </div>
-  <script src="script.js"></script>  
+  <form id="productForm">
+    <label for="productName">Product Name:</label>
+    <input type="text" id="productName" name="productName"><br><br>
+
+    <label for="productPrice">Product Price:</label>
+    <input type="number" id="productPrice" name="productPrice"><br><br>
+
+    <label for="productCategory">Product Category:</label>
+    <select id="productCategory" name="productCategory">
+      <option value="electronics">Electronics</option>
+      <option value="food">Food</option>
+      <option value="shopping">Shopping</option>
+    </select><br><br>
+
+    <input type="submit" value="Submit">
+  </form>
+
+  <div id="productList"></div>
+
+  <script>
+    // Function to save product details to CRUDcrud
+    function saveProductDetails(formData) {
+      var url = "https://crudcrud.com/api/a31d9bfcf3a74748be710332245ec703/products"; // Replace API_KEY with your actual API key
+      var request = new XMLHttpRequest();
+      request.open("POST", url, true);
+      request.setRequestHeader("Content-Type", "application/json");
+      request.send(JSON.stringify(formData));
+    }
+
+    // Function to delete product details from CRUDcrud
+    function deleteProductDetails(productId) {
+      var url = "https://crudcrud.com/api/a31d9bfcf3a74748be710332245ec703/products/" + productId; // Replace API_KEY with your actual API key
+      var request = new XMLHttpRequest();
+      request.open("DELETE", url, true);
+      request.send();
+    }
+
+    document.getElementById("productForm").addEventListener("submit", function(event) {
+      event.preventDefault(); // Prevent form submission
+
+      // Get form values
+      var productName = document.getElementById("productName").value;
+      var productPrice = document.getElementById("productPrice").value;
+      var productCategory = document.getElementById("productCategory").value;
+
+      // Create product object
+      var product = {
+        name: productName,
+        price: productPrice,
+        category: productCategory
+      };
+
+      // Save product details to local storage
+      var productList = JSON.parse(localStorage.getItem("productList")) || [];
+      productList.push(product);
+      localStorage.setItem("productList", JSON.stringify(productList));
+
+      // Save product details to CRUDcrud
+      saveProductDetails(product);
+
+      // Clear the form
+      document.getElementById("productForm").reset();
+
+      // Refresh the product list
+      displayProductList();
+    });
+
+    function deleteProduct(productId) {
+      // Delete product details from local storage
+      var productList = JSON.parse(localStorage.getItem("productList")) || [];
+      productList = productList.filter(function(product) {
+        return product._id !== productId;
+      });
+      localStorage.setItem("productList", JSON.stringify(productList));
+
+      // Delete product details from CRUDcrud
+      deleteProductDetails(productId);
+
+      // Refresh the product list
+      displayProductList();
+    }
+
+    function displayProductList() {
+      var productList = JSON.parse(localStorage.getItem("productList")) || [];
+      var productListDiv = document.getElementById("productList");
+      productListDiv.innerHTML = "";
+
+      productList.forEach(function(product) {
+        var productDiv = document.createElement("div");
+        productDiv.innerHTML = "<p>**Name:** " + product.name + "</p>" +
+                               "<p>**Price:** " + product.price + "</p>" +
+                               "<p>**Category:** " + product.category + "</p>" +
+                               "<button onclick='deleteProduct(\"" + product._id + "\")'>Delete</button>";
+        productListDiv.appendChild(productDiv);
+      });
+    }
+
+    // Display the product list on page load
+    displayProductList();
+  </script>
 </body>
 </html>
